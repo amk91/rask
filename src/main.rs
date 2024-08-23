@@ -8,9 +8,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::{
-    fs::File,
-    io::{self, prelude::*, Result},
-    path::PathBuf,
+    fs::File, io::{self, prelude::*, Result}, ops::Add, path::PathBuf
 };
 
 // use rand::Rng;
@@ -23,7 +21,7 @@ use ui::ui;
 mod app;
 use app::{
     task::{Task, TaskStatus},
-    App,
+    App, SelectedPanel,
 };
 
 fn main() -> Result<()> {
@@ -104,6 +102,16 @@ fn handle_event_loop(app: &mut App, frame: &Frame) -> Result<bool> {
                 match key.code {
                     KeyCode::Tab => app.select_next_panel(),
                     KeyCode::BackTab => app.select_previous_panel(),
+
+                    KeyCode::Up | KeyCode::Down => {
+                        if let SelectedPanel::List(Some(_)) = app.get_selected_panel() {
+                            if key.code == KeyCode::Up {
+                                app.decrement_list_selected_index();
+                            } else {
+                                app.increment_list_selected_index();
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }

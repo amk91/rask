@@ -9,9 +9,9 @@ use uuid::Uuid;
 
 pub enum SelectedPanel {
     None,
-    List(usize),
-    Title((usize, Uuid)),
-    Task((usize, Uuid)),
+    List(Option<usize>),
+    Title(Option<(usize, Uuid)>),
+    Task(Option<(usize, Uuid)>),
 }
 
 pub struct App {
@@ -70,6 +70,10 @@ impl App {
         }
     }
 
+    pub fn get_tasks(&self) -> &Vec<Task> {
+        &self.tasks
+    }
+
     pub fn get_tasks_titles(&self) -> Vec<String> {
         self.tasks.iter().map(|task| task.title.clone()).collect()
     }
@@ -78,29 +82,66 @@ impl App {
         self.tasks.iter().find(|task| task.uuid == uuid)
     }
 
+    pub fn get_tasks_size(&self) -> usize {
+        self.tasks.len()
+    }
+
     pub fn get_selected_panel(&self) -> &SelectedPanel {
         &self.selected_panel
     }
 
+    pub fn get_list_selected_index(&self) -> Option<usize> {
+        if let SelectedPanel::List(Some(index)) = self.selected_panel {
+            return Some(index);
+        }
+
+        None
+    }
+
+    pub fn increment_list_selected_index(&mut self) {
+        if let SelectedPanel::List(Some(ref mut index)) = self.selected_panel {
+            *index = (*index + 1) % self.tasks.len();
+        }
+    }
+
+    pub fn decrement_list_selected_index(&mut self) {
+        if let SelectedPanel::List(Some(ref mut index)) = self.selected_panel {
+            let result = *index as isize - 1;
+            if result < 0 {
+                *index = self.tasks.len() - 1;
+            } else {
+                *index = result as usize;
+            }
+        }
+    }
+
     pub fn select_next_panel(&mut self) {
         match self.selected_panel {
-            SelectedPanel::None => self.selected_panel = SelectedPanel::List(0),
-            SelectedPanel::List(index) => {
-                self.selected_panel = SelectedPanel::Title((index, self.tasks[index].uuid))
-            },
-            SelectedPanel::Title((index, uuid)) => self.selected_panel = SelectedPanel::Task((index, uuid)),
-            SelectedPanel::Task((index, _)) => self.selected_panel = SelectedPanel::List(index),
+            SelectedPanel::None => self.selected_panel = SelectedPanel::List(
+                if self.tasks.len() > 0 { Some(0) } else { None }
+            ),
+            SelectedPanel::List(value) => self.selected_panel = SelectedPanel::Title(
+                if let Some(index) = value { Some((index, self.tasks[index].uuid)) } else { None }
+            ),
+            SelectedPanel::Title(value) => self.selected_panel = SelectedPanel::Task(value),
+            SelectedPanel::Task(value) => self.selected_panel = SelectedPanel::List(
+                if let Some((index, _)) = value { Some(index) } else { None }
+            ),
         }
     }
 
     pub fn select_previous_panel(&mut self) {
         match self.selected_panel {
-            SelectedPanel::None => self.selected_panel = SelectedPanel::List(0),
-            SelectedPanel::List(index) => {
-                self.selected_panel = SelectedPanel::Task((index, self.tasks[index].uuid))
-            },
-            SelectedPanel::Task((index, uuid)) => self.selected_panel = SelectedPanel::Title((index, uuid)),
-            SelectedPanel::Title((index, _)) => self.selected_panel = SelectedPanel::List(index),
+            SelectedPanel::None => self.selected_panel = SelectedPanel::List(
+                if self.tasks.len() > 0 { Some(0) } else { None }
+            ),
+            SelectedPanel::List(value) => self.selected_panel = SelectedPanel::Task(
+                if let Some(index) = value { Some((index, self.tasks[index].uuid))} else { None }
+            ),
+            SelectedPanel::Task(value) => self.selected_panel = SelectedPanel::Title(value),
+            SelectedPanel::Title(value) => self.selected_panel = SelectedPanel::List(
+                if let Some((index, _)) = value { Some(index) } else { None }
+            ),
         }
     }
 }
