@@ -1,6 +1,7 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
+    text::Text,
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
@@ -70,7 +71,20 @@ fn render_task_list(frame: &mut Frame, app: &App, area: Rect, style: Style, inde
 }
 
 fn render_task_title(frame: &mut Frame, app: &App, area: Rect, style: Style) {
-    let task_title = Paragraph::new("This is a title")
+    let task_title_text = match app.get_selected_panel() {
+        SelectedPanel::List(Some(index))
+        | SelectedPanel::Title(Some((index, _)))
+        | SelectedPanel::Task(Some((index, _))) => {
+            if let Some(task) = app.get_task_by_index(*index) {
+                Text::from(task.title.clone())
+            } else {
+                Text::raw("")
+            }
+        },
+        _ => Text::raw(""),
+    };
+
+    let task_title = Paragraph::new(task_title_text)
         .block(Block::new().borders(Borders::ALL))
         .style(style);
     frame.render_widget(task_title, area);

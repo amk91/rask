@@ -78,8 +78,12 @@ impl App {
         self.tasks.iter().map(|task| task.title.clone()).collect()
     }
 
-    pub fn get_task(&self, uuid: Uuid) -> Option<&Task> {
+    pub fn get_task_by_uuid(&self, uuid: Uuid) -> Option<&Task> {
         self.tasks.iter().find(|task| task.uuid == uuid)
+    }
+
+    pub fn get_task_by_index(&self, index: usize) -> Option<&Task> {
+        self.tasks.get(index)
     }
 
     pub fn get_tasks_size(&self) -> usize {
