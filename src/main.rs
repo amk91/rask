@@ -1,5 +1,6 @@
 use ratatui::{
     crossterm::{
+        cursor::EnableBlinking,
         event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
         execute,
         terminal::{enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -8,7 +9,8 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::{
-    fs::File, io::{self, prelude::*, Result}, ops::Add, path::PathBuf
+    io::{self, prelude::*, Result},
+    path::PathBuf,
 };
 
 // use rand::Rng;
@@ -20,15 +22,14 @@ use ui::ui;
 
 mod app;
 use app::{
-    task::{Task, TaskStatus},
-    App, SelectedPanel,
+    App, SelectedPanel, SelectedTaskField,
 };
 
 fn main() -> Result<()> {
     enable_raw_mode()?;
 
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    execute!(stdout, EnterAlternateScreen, EnableBlinking)?;
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
@@ -64,7 +65,6 @@ fn main() -> Result<()> {
     //             percentage: Some(90),
     //         },
     //     ];
-
     //     let stringyfied_json = serde_json::to_string_pretty(&tasks)?;
     //     let mut file = File::create(".\\resources\\sample_task.json")?;
     //     file.write_all(stringyfied_json.as_bytes())?;
@@ -100,8 +100,22 @@ fn handle_event_loop(app: &mut App, frame: &Frame) -> Result<bool> {
                 }
             } else {
                 match key.code {
-                    KeyCode::Tab => app.select_next_panel(),
-                    KeyCode::BackTab => app.select_previous_panel(),
+                    KeyCode::Tab => match app.get_selected_panel() {
+                        SelectedPanel::Task(Some((_, task_field)))
+                            if task_field != SelectedTaskField::Description =>
+                        {
+                            app.select_next_task_field()
+                        }
+                        _ => app.select_next_panel(),
+                    },
+                    KeyCode::BackTab => match app.get_selected_panel() {
+                        SelectedPanel::Task(Some((_, task_field)))
+                            if task_field != SelectedTaskField::Status =>
+                        {
+                            app.select_previous_task_field()
+                        }
+                        _ => app.select_previous_panel(),
+                    },
 
                     KeyCode::Up | KeyCode::Down => {
                         if let SelectedPanel::List(Some(_)) = app.get_selected_panel() {

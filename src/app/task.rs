@@ -1,12 +1,11 @@
-use serde::{Deserialize, Serialize};
 use chrono::{
     serde::{ts_seconds, ts_seconds_option},
-    DateTime,
-    Utc
+    DateTime, Utc,
 };
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum TaskStatus {
     New,
     InProgress,
@@ -43,7 +42,7 @@ impl Task {
             complete_by,
             description,
             status,
-            percentage
+            percentage,
         }
     }
 }

@@ -3,27 +3,27 @@
     "uuid": "1ef60d42-83ce-6910-b5e0-1a3e0f3c3528",
     "title": "Something",
     "created": 1724364979,
-    "complete_by": null,
-    "description": null,
+    "complete_by": 1724364979,
+    "description": "Lorem ipsum odor amet, consectetuer adipiscing elit. Suspendisse vestibulum urna parturient pharetra efficitur, ac curabitur. Quis senectus phasellus, gravida tempus est cursus varius. Cras rutrum nec donec libero consequat lacus sem volutpat. Nisi aenean imperdiet blandit ligula non tortor.",
     "status": "New",
-    "percentage": 10
+    "percentage": 0
   },
   {
     "uuid": "1ef60d42-83ce-698e-b5e1-1a3e0f3c3528",
     "title": "Another",
     "created": 1724364979,
-    "complete_by": null,
-    "description": null,
-    "status": "New",
-    "percentage": 50
+    "complete_by": 1724364979,
+    "description": "Lorem ipsum odor amet, consectetuer adipiscing elit. Lobortis convallis vel vehicula habitant mi dis. Suscipit erat accumsan varius habitant lacus sapien. Elit facilisi tristique cursus; ad morbi integer elit.",
+    "status": "InProgress",
+    "percentage": 0
   },
   {
     "uuid": "1ef60d42-83ce-6992-b5e2-1a3e0f3c3528",
     "title": "Nobody",
     "created": 1724364979,
-    "complete_by": null,
-    "description": null,
+    "complete_by": 1724364979,
+    "description": "Lorem ipsum odor amet, consectetuer adipiscing elit.",
     "status": "New",
-    "percentage": 90
+    "percentage": 0
   }
 ]

@@ -1,17 +1,26 @@
-use std::{fs::File, io::Read, path::PathBuf};
 use anyhow::{anyhow, Result};
 use chrono::offset;
 use rand::Rng;
+use std::{fs::File, io::Read, path::PathBuf};
 
 pub mod task;
 use task::{Task, TaskStatus};
 use uuid::Uuid;
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum SelectedTaskField {
+    None,
+    Status,
+    CompleteBy,
+    Description,
+}
+
+#[derive(Copy, Clone, PartialEq)]
 pub enum SelectedPanel {
     None,
     List(Option<usize>),
-    Title(Option<(usize, Uuid)>),
-    Task(Option<(usize, Uuid)>),
+    Title(Option<usize>),
+    Task(Option<(usize, SelectedTaskField)>),
 }
 
 pub struct App {
@@ -26,7 +35,7 @@ impl App {
             uuid_node: rand::thread_rng().gen(),
             tasks: match filepath {
                 Some(filepath) => App::load_tasks_from_file(filepath).unwrap_or(vec![]),
-                None => vec![]
+                None => vec![],
             },
             selected_panel: SelectedPanel::None,
         }
@@ -45,10 +54,13 @@ impl App {
                     filepath.to_str().unwrap_or("N/A"),
                     err
                 )),
-            }
+            };
         }
 
-        Err(anyhow!("File {} does not exist", filepath.to_str().unwrap_or("N/A")))
+        Err(anyhow!(
+            "File {} does not exist",
+            filepath.to_str().unwrap_or("N/A")
+        ))
     }
 
     pub fn add_task(&mut self, title: String) -> &Task {
@@ -90,8 +102,8 @@ impl App {
         self.tasks.len()
     }
 
-    pub fn get_selected_panel(&self) -> &SelectedPanel {
-        &self.selected_panel
+    pub fn get_selected_panel(&self) -> SelectedPanel {
+        self.selected_panel
     }
 
     pub fn get_list_selected_index(&self) -> Option<usize> {
@@ -120,32 +132,72 @@ impl App {
     }
 
     pub fn select_next_panel(&mut self) {
-        match self.selected_panel {
-            SelectedPanel::None => self.selected_panel = SelectedPanel::List(
-                if self.tasks.len() > 0 { Some(0) } else { None }
-            ),
-            SelectedPanel::List(value) => self.selected_panel = SelectedPanel::Title(
-                if let Some(index) = value { Some((index, self.tasks[index].uuid)) } else { None }
-            ),
-            SelectedPanel::Title(value) => self.selected_panel = SelectedPanel::Task(value),
-            SelectedPanel::Task(value) => self.selected_panel = SelectedPanel::List(
-                if let Some((index, _)) = value { Some(index) } else { None }
-            ),
+        match &self.selected_panel {
+            SelectedPanel::None => {
+                self.selected_panel =
+                    SelectedPanel::List(if self.tasks.len() > 0 { Some(0) } else { None })
+            }
+            SelectedPanel::List(value) => self.selected_panel = SelectedPanel::Title(*value),
+            SelectedPanel::Title(value) => {
+                self.selected_panel = SelectedPanel::Task(if let Some(index) = value {
+                    Some((*index, SelectedTaskField::Status))
+                } else {
+                    None
+                })
+            }
+            SelectedPanel::Task(value) => {
+                self.selected_panel = SelectedPanel::List(if let Some((index, _)) = value {
+                    Some(*index)
+                } else {
+                    None
+                })
+            }
         }
     }
 
     pub fn select_previous_panel(&mut self) {
-        match self.selected_panel {
-            SelectedPanel::None => self.selected_panel = SelectedPanel::List(
-                if self.tasks.len() > 0 { Some(0) } else { None }
-            ),
-            SelectedPanel::List(value) => self.selected_panel = SelectedPanel::Task(
-                if let Some(index) = value { Some((index, self.tasks[index].uuid))} else { None }
-            ),
-            SelectedPanel::Task(value) => self.selected_panel = SelectedPanel::Title(value),
-            SelectedPanel::Title(value) => self.selected_panel = SelectedPanel::List(
-                if let Some((index, _)) = value { Some(index) } else { None }
-            ),
+        match &self.selected_panel {
+            SelectedPanel::None => {
+                self.selected_panel =
+                    SelectedPanel::List(if self.tasks.len() > 0 { Some(0) } else { None })
+            }
+            SelectedPanel::List(value) => {
+                self.selected_panel = SelectedPanel::Task(if let Some(index) = value {
+                    Some((*index, SelectedTaskField::Description))
+                } else {
+                    None
+                })
+            }
+            SelectedPanel::Task(value) => {
+                self.selected_panel = SelectedPanel::Title(if let Some((index, _)) = value {
+                    Some(*index)
+                } else {
+                    None
+                })
+            }
+            SelectedPanel::Title(value) => self.selected_panel = SelectedPanel::List(*value),
+        }
+    }
+
+    pub fn select_next_task_field(&mut self) {
+        if let SelectedPanel::Task(Some((_, ref mut selected_task_field))) = self.selected_panel {
+            *selected_task_field = match selected_task_field {
+                SelectedTaskField::None => SelectedTaskField::Status,
+                SelectedTaskField::Status => SelectedTaskField::CompleteBy,
+                SelectedTaskField::CompleteBy => SelectedTaskField::Description,
+                SelectedTaskField::Description => SelectedTaskField::None,
+            }
+        }
+    }
+
+    pub fn select_previous_task_field(&mut self) {
+        if let SelectedPanel::Task(Some((_, ref mut selected_task_field))) = self.selected_panel {
+            *selected_task_field = match selected_task_field {
+                SelectedTaskField::None => SelectedTaskField::Description,
+                SelectedTaskField::Status => SelectedTaskField::None,
+                SelectedTaskField::CompleteBy => SelectedTaskField::Status,
+                SelectedTaskField::Description => SelectedTaskField::CompleteBy,
+            }
         }
     }
 }
